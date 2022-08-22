@@ -1,9 +1,9 @@
-import subprocess
+'''import subprocess
 
 proc = subprocess.Popen('php ./index.php', shell=True, stdout=subprocess.PIPE)
 script_response = proc.stdout.read()
 print(script_response)
-
+'''
 from __future__ import unicode_literals
 import os
 from flask import Flask, request, abort
@@ -27,40 +27,31 @@ handler = WebhookHandler(config.get('line-bot', 'channel_secret'))
 
 # 接收 LINE 的資訊
 @app.route("/callback", methods=['POST'])
+
 def callback():
+    # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
 
+    # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-    
+
+    # handle webhook body
     try:
-        print(body, signature)
         handler.handle(body, signature)
-        
     except InvalidSignatureError:
+        print("Invalid signature. Please check your channel access token/channel secret.")
         abort(400)
 
     return 'OK'
 
 # 學你說話
 @handler.add(MessageEvent, message=TextMessage)
-def pretty_echo(event):
-    
-    if event.source.user_id != "Udeadbeefdeadbeefdeadbeefdeadbeef":
-        
-        # Phoebe 愛唱歌
-        pretty_note = '♫♪♬'
-        pretty_text = ''
-        
-        for i in event.message.text:
-        
-            pretty_text += i
-            pretty_text += random.choice(pretty_note)
-    
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=pretty_text)
-        )
+def handle_message(event):
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=event.message.text))
+
 
 if __name__ == "__main__":
     app.run()
